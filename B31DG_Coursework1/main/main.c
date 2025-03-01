@@ -16,8 +16,8 @@
 #define select_button GPIO_NUM_26 // Select button connected to GPIO26
 
 // Define delays
-#define syncDelay 50
-#define debounceDelay 50
+#define syncDelay 50    //synchronisation delay before signal functions
+#define debounceDelay 50 //debounce delay for button presses
 
 // Initial pulse-on time
 const uint16_t a = 800; // us
@@ -29,48 +29,52 @@ const uint16_t d = 6000; // us = 6ms
 volatile bool toggleEnable = false;  // Marked as volatile to avoid compiler optimizations
 volatile bool toggleSelect = true;   // Marked as volatile
 
-#define debugMode true
+#define debugMode false
 
 #if debugMode
-#define timingFactor 1000
+#define timingFactor 1000 //scale delays for dubigging 
 #else
-#define timingFactor 1
+#define timingFactor 1 //Normal operation (us)
 #endif
 
-// Interrupt Service Routines
+// Interrupt Service Routine for select button
 static void IRAM_ATTR selectISR(void *arg) {
     esp_rom_delay_us(debounceDelay); // Debounce delay
-    if (gpio_get_level(select_button)) {
-        toggleSelect = !toggleSelect;
+    if (gpio_get_level(select_button)) //check button press
+    {
+        toggleSelect = !toggleSelect; //toggle select button
     }
 }
 
+// Interrupt Service Routine for enable button
 static void IRAM_ATTR enableISR(void *arg) {
     esp_rom_delay_us(debounceDelay); // Debounce delay
-    if (gpio_get_level(enable_button)) {
-        toggleEnable = !toggleEnable;
+    if (gpio_get_level(enable_button)) //check button press
+    {
+        toggleEnable = !toggleEnable; //toggle enable button
     }
 }
 
-// Signal functions
+//Signal function - increasing pulse signal
 void sig() {
-    for (int i = a; i <= 1550; i += 50) {
-        gpio_set_level(greenLED, toggleEnable);
-        esp_rom_delay_us(i * timingFactor);
-        gpio_set_level(greenLED, 0);
-        esp_rom_delay_us(b * timingFactor);
+    for (int i = a; i <= 1550; i += 50) { //increase pulse-on time by 50 for 16 loops
+        gpio_set_level(greenLED, toggleEnable); //Green LED on
+        esp_rom_delay_us(i * timingFactor); //pulse-on delay 
+        gpio_set_level(greenLED, 0); //Green LED off
+        esp_rom_delay_us(b * timingFactor); //pulse-off delay
     }
-    esp_rom_delay_us(d * timingFactor);
+    esp_rom_delay_us(d * timingFactor); //delay between cycles
 }
 
+//Alternative signal funtion - decreasing pulse signal 
 void altSig() {
-    for (int i = 1550; i >= a; i -= 50) {
-        gpio_set_level(greenLED, toggleEnable);
-        esp_rom_delay_us(i * timingFactor);
-        gpio_set_level(greenLED, 0);
-        esp_rom_delay_us(b * timingFactor);
+    for (int i = 1550; i >= a; i -= 50) { //decrease pulse-on time by 50 for 16 loops
+        gpio_set_level(greenLED, toggleEnable); //green LED on
+        esp_rom_delay_us(i * timingFactor); //pulse-on delay 
+        gpio_set_level(greenLED, 0); //green LED off
+        esp_rom_delay_us(b * timingFactor); //pulse-off delay 
     }
-    esp_rom_delay_us(d * timingFactor);
+    esp_rom_delay_us(d * timingFactor); //delay between cycles 
 }
 
 // Main application loop
@@ -102,17 +106,18 @@ void app_main() {
     gpio_set_level(redLED, 0);  // Start with LEDs off
     gpio_set_level(greenLED, 0);
 
+    //main loop
     while (1) {
-        if (toggleSelect) {
+        if (toggleSelect) { //if toggleSelect is true, generate increasing signal 
             gpio_set_level(redLED, 1);  // Turn red LED ON
             esp_rom_delay_us(syncDelay * timingFactor);
             gpio_set_level(redLED, 0);  // Turn red LED OFF
-            sig();
-        } else {
+            sig(); //executes increasing signal
+        } else { //otherwise generate decreasing signal
             gpio_set_level(redLED, 1);  // Turn red LED ON
             esp_rom_delay_us(syncDelay * timingFactor);
             gpio_set_level(redLED, 0);  // Turn red LED OFF
-            altSig();
+            altSig(); //executes decreasing signal
         }
     }
 }
