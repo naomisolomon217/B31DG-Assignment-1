@@ -5,11 +5,11 @@ The normal signal is a continuous loop of 16 pulses, each increasing by a time o
 
 This has been implemented in both the Arduino IDE and Visual Studio code environment using the Espresssif extension.
 
-Visual Studio Code:
+##Visual Studio Code:
 main.c defines the signals and the interrupts for the buttons to trigger the signals when pressed. It includes the configurations of the buttons adn LEDS and conditions for the behaviour of the LEDs.
 
 header.h holds all the definitions and variables for the code seperately anf gets called in main.c.
 
-Arduino IDE:
+##Arduino IDE:
 ESass1.ino is the application of the sotware in Arduino, defining two alternate signals, controled by two buttons and represented by LEDs.
 
